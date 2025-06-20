@@ -80,6 +80,35 @@ if "registro" in st.session_state and st.session_state["registro"]:
     st.write(f"**Total de Calorias:** {total['Calorias']} kcal")
     st.write(f"**Total de Carboidratos:** {total['Carboidratos']} g")
     st.write(f"**Total de Açúcar:** {total['Açúcar']} g")
+
+    # ======= INÍCIO da seção Meta Diária =======
+    st.subheader("🎯 Meta Diária")
+
+    # Defina aqui suas metas diárias
+    meta_diaria = {
+        "Calorias": 2000,
+        "Carboidratos": 300,
+        "Açúcar": 30,
+    }
+
+    # Converte total para garantir não dar erro se vazio
+    consumo = {
+        "Calorias": total.get("Calorias", 0),
+        "Carboidratos": total.get("Carboidratos", 0),
+        "Açúcar": total.get("Açúcar", 0),
+    }
+
+    saldo = {k: round(meta_diaria[k] - consumo[k], 2) for k in meta_diaria}
+
+    # Mostrar tabela de metas, consumo e saldo
+    df_meta = pd.DataFrame({
+        "Meta Diária": meta_diaria,
+        "Consumido": consumo,
+        "Saldo": saldo
+    })
+
+    st.table(df_meta)
+    # ======= FIM da seção Meta Diária =======
 else:
     st.info("Nenhum alimento registrado ainda.")
 
