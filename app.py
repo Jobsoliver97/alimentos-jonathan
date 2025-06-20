@@ -86,9 +86,9 @@ if "registro" in st.session_state and st.session_state["registro"]:
 
     # Defina aqui suas metas diárias
     meta_diaria = {
-        "Calorias": 2000,
-        "Carboidratos": 300,
-        "Açúcar": 30,
+        "Calorias": 1800,
+        "Carboidratos": 350,
+        "Açúcar": 80,
     }
 
     # Converte total para garantir não dar erro se vazio
