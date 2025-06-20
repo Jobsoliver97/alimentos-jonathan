@@ -43,7 +43,6 @@ if st.button("Registrar Consumo"):
     calorias = round(info["Calorias (kcal)"] * fator, 2)
     carboidratos = round(info["Carboidratos (g)"] * fator, 2)
     acucar = round(info["Açúcar (g)"] * fator, 2)
-    lactose = info["Lactose"]
 
     registro = {
         "DataHora": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -51,64 +50,58 @@ if st.button("Registrar Consumo"):
         "Quantidade (g/ml)": quantidade,
         "Calorias": calorias,
         "Carboidratos": carboidratos,
-        "Açúcar": acucar,
-        "Lactose": lactose
+        "Açúcar": acucar
     }
 
-    # Salvar no CSV
     salvar_registro_csv(registro)
-
-    # Manter na sessão para mostrar logo abaixo
-    if "registro" not in st.session_state:
-        st.session_state["registro"] = []
-    st.session_state["registro"].append(registro)
-
     st.success("Alimento registrado com sucesso!")
-    if lactose == "Sim":
-        st.warning("⚠️ Atenção: este alimento contém lactose.")
 
 # ========================
-# Exibir Registros do Dia (sessão)
+# Exibir Registros do Dia a partir do CSV
 # ========================
-if "registro" in st.session_state and st.session_state["registro"]:
-    df_registro = pd.DataFrame(st.session_state["registro"])
-    st.subheader("📋 Registro do Dia")
-    st.dataframe(df_registro, use_container_width=True)
+st.subheader("📋 Registro do Dia")
 
-    st.subheader("🔢 Totais do Dia")
-    total = df_registro[["Calorias", "Carboidratos", "Açúcar"]].sum()
-    st.write(f"**Total de Calorias:** {total['Calorias']} kcal")
-    st.write(f"**Total de Carboidratos:** {total['Carboidratos']} g")
-    st.write(f"**Total de Açúcar:** {total['Açúcar']} g")
+df_historico = carregar_registros_csv()
+if not df_historico.empty:
+    df_historico["DataHora"] = pd.to_datetime(df_historico["DataHora"])
+    hoje = datetime.now().date()
+    df_dia = df_historico[df_historico["DataHora"].dt.date == hoje]
 
-    # ======= INÍCIO da seção Meta Diária =======
-    st.subheader("🎯 Meta Diária")
+    if not df_dia.empty:
+        st.dataframe(df_dia, use_container_width=True)
 
-    # Defina aqui suas metas diárias
-    meta_diaria = {
-        "Calorias": 1800,
-        "Carboidratos": 350,
-        "Açúcar": 80,
-    }
+        st.subheader("🔢 Totais do Dia")
+        total = df_dia[["Calorias", "Carboidratos", "Açúcar"]].sum()
+        st.write(f"**Total de Calorias:** {total['Calorias']} kcal")
+        st.write(f"**Total de Carboidratos:** {total['Carboidratos']} g")
+        st.write(f"**Total de Açúcar:** {total['Açúcar']} g")
 
-    # Converte total para garantir não dar erro se vazio
-    consumo = {
-        "Calorias": total.get("Calorias", 0),
-        "Carboidratos": total.get("Carboidratos", 0),
-        "Açúcar": total.get("Açúcar", 0),
-    }
+        # 🎯 Meta Diária
+        st.subheader("🎯 Meta Diária")
 
-    saldo = {k: round(meta_diaria[k] - consumo[k], 2) for k in meta_diaria}
+        meta_diaria = {
+            "Calorias": 2000,
+            "Carboidratos": 300,
+            "Açúcar": 30,
+        }
 
-    # Mostrar tabela de metas, consumo e saldo
-    df_meta = pd.DataFrame({
-        "Meta Diária": meta_diaria,
-        "Consumido": consumo,
-        "Saldo": saldo
-    })
+        consumo = {
+            "Calorias": total.get("Calorias", 0),
+            "Carboidratos": total.get("Carboidratos", 0),
+            "Açúcar": total.get("Açúcar", 0),
+        }
 
-    st.table(df_meta)
-    # ======= FIM da seção Meta Diária =======
+        saldo = {k: round(meta_diaria[k] - consumo[k], 2) for k in meta_diaria}
+
+        df_meta = pd.DataFrame({
+            "Meta Diária": meta_diaria,
+            "Consumido": consumo,
+            "Saldo": saldo
+        })
+
+        st.table(df_meta)
+    else:
+        st.info("Nenhum alimento registrado hoje ainda.")
 else:
     st.info("Nenhum alimento registrado ainda.")
 
@@ -118,14 +111,9 @@ else:
 st.markdown("---")
 st.subheader("📚 Histórico Completo")
 
-df_historico = carregar_registros_csv()
-
 if not df_historico.empty:
-    # Converter DataHora para datetime
-    df_historico["DataHora"] = pd.to_datetime(df_historico["DataHora"])
     st.dataframe(df_historico.sort_values(by="DataHora", ascending=False), use_container_width=True)
 
-    # Resumo mensal
     df_historico["Mês"] = df_historico["DataHora"].dt.to_period("M")
     resumo_mensal = df_historico.groupby("Mês")[["Calorias", "Carboidratos", "Açúcar"]].sum()
     st.subheader("📈 Resumo Mensal")
