@@ -81,8 +81,8 @@ if not df_historico.empty:
 
         meta_diaria = {
             "Calorias": 2000,
-            "Carboidratos": 300,
-            "Açúcar": 30,
+            "Carboidratos": 350,
+            "Açúcar": 80,
         }
 
         consumo = {
